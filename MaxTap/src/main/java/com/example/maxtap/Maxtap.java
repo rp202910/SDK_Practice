@@ -4,27 +4,34 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlayer;
 
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 
 public class Maxtap {
     ExoPlayer player;
 
-    public void getAds(ExoPlayer player1, final ImageView image)  {
+    public void getAds(ExoPlayer player1, final ImageView image) {
         image.setVisibility(View.GONE);
 
-        new DownLoadImageTask(image).execute("https://static.toiimg.com/thumb/82004611.cms?width=200&height=200&imgsize=360172");
+        new GetImageJson(image).execute();
 
 
         player = player1;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 100; i++) {
             int mill = 1000 * (i + 1);
 
             Handler handler = new Handler();
@@ -48,16 +55,62 @@ public class Maxtap {
                         image.setVisibility(View.GONE);
                     }
 
-//
+
                 }
             }, mill);
 
 
         }
 
-
     }
-    private class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
+
+private static class GetImageJson extends AsyncTask<Void, Void, Void> {
+        ImageView imageView;
+        String url1;
+        public GetImageJson (ImageView imageView){
+        this.imageView = imageView;
+    }
+
+
+        @Override
+    protected Void doInBackground(Void... arg0) {
+        HttpHandler sh = new HttpHandler();
+        // Making a request to url and getting response
+        String url = "https://firebasestorage.googleapis.com/v0/b/maxtap-adserver-dev.appspot.com/o/content1.json?alt=media&token=4464ee3b-8463-4ede-a6df-8e717a7d7aae";
+        String jsonStr = sh.makeServiceCall(url);
+
+
+        if (jsonStr != null) {
+            try {
+                JSONObject jsonObj = new JSONObject(jsonStr);
+
+                // Getting JSON Array node
+                JSONObject ads = jsonObj.getJSONObject("Ad2");
+                JSONObject img = ads.getJSONObject("image");
+                url1 = img.getString("src");
+
+                }
+            catch (final JSONException e) {
+
+            }
+
+        } else {
+
+
+        }
+
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void result) {
+        super.onPostExecute(result);
+
+        new DownLoadImageTask(imageView).execute(url1);
+    }
+}
+
+private static class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
         ImageView imageView;
 
         public DownLoadImageTask(ImageView imageView){
@@ -92,8 +145,6 @@ public class Maxtap {
             imageView.setImageBitmap(result);
         }
     }
-
-
 
 
 }
