@@ -19,24 +19,24 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-    ExoPlayer player;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+            ExoPlayer player;
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_main);
 
-        // creating an instance of ExoPlayer.
-        player = new ExoPlayer.Builder(this).build();
-        final ImageView image =findViewById(R.id.imageView);
-        PlayerView playerView=findViewById(R.id.exoPlayer);
-        //Binding the player with the view that is there in our xml.
-        playerView.setPlayer(player);
-        //Building the media Item.
-        MediaItem mediaItem = MediaItem.fromUri("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4" );
-        //Setting the media item that is to be played.
-        player.setMediaItem(mediaItem);
-        //preparing the player
-        player.prepare();
+                // creating an instance of ExoPlayer.
+                player = new ExoPlayer.Builder(this).build();
+                final ImageView image =findViewById(R.id.imageView);
+                PlayerView playerView=findViewById(R.id.exoPlayer);
+                //Binding the player with the view that is there in our xml.
+                playerView.setPlayer(player);
+                //Building the media Item.
+                MediaItem mediaItem = MediaItem.fromUri("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4" );
+                //Setting the media item that is to be played.
+                player.setMediaItem(mediaItem);
+                //preparing the player
+                player.prepare();
         //playing the video.
         player.play();
 

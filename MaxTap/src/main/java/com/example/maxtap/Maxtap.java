@@ -19,18 +19,26 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 public class Maxtap {
     ExoPlayer player;
 
     public void getAds(ExoPlayer player1, final ImageView image) {
         image.setVisibility(View.GONE);
+        final ArrayList<String>arr=new ArrayList<String>();
+        final ArrayList<JSONObject> arrayList=new ArrayList<JSONObject>();
+        new GetImageJson(arr,arrayList).execute();
 
-        new GetImageJson(image).execute();
+
 
 
         player = player1;
+        final Integer[] var = {new Integer(0)};
         for (int i = 0; i < 100; i++) {
             int mill = 1000 * (i + 1);
 
@@ -38,37 +46,54 @@ public class Maxtap {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-
-
+                    if(arrayList.size()> var[0].intValue()){
                     long x = player.getCurrentPosition() / 1000;
-                    if (x == 10) {
+                    if(x==1){
+                        try {
+                            new DownLoadImageTask(image).execute((String)arrayList.get(var[0].intValue()).get("img_url"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                    else {
+                        try {
+
+                            Log.e("start-----",arrayList.size()+" "+ var[0].intValue());
+
+                            if (x == (((Integer)(arrayList.get(var[0].intValue()).get("start")))).intValue()) {
 
 
-                        image.setVisibility(View.VISIBLE);
-                    } else if (x == 18) {
+                                image.setVisibility(View.VISIBLE);
+                            } else if (x ==(Integer)(arrayList.get(var[0].intValue()).get("end"))) {
 
-                        image.setVisibility(View.GONE);
+                                image.setVisibility(View.GONE);
+                                var[0] =new Integer(var[0].intValue()+1);
 
-                    } else if (x == 25) {
-                        image.setVisibility(View.VISIBLE);
-                    } else if (x == 35) {
-                        image.setVisibility(View.GONE);
+                                new DownLoadImageTask(image).execute(arr.get(1));
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
 
-
+                }
                 }
             }, mill);
 
 
-        }
+    }
 
     }
 
 private static class GetImageJson extends AsyncTask<Void, Void, Void> {
-        ImageView imageView;
+        ArrayList<String> arr;
+        ArrayList<JSONObject> arr1;
         String url1;
-        public GetImageJson (ImageView imageView){
-        this.imageView = imageView;
+        public GetImageJson (ArrayList<String> arrayList,ArrayList<JSONObject> object){
+        arr=arrayList;
+        arr1=object;
     }
 
 
@@ -76,18 +101,51 @@ private static class GetImageJson extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... arg0) {
         HttpHandler sh = new HttpHandler();
         // Making a request to url and getting response
-        String url = "https://firebasestorage.googleapis.com/v0/b/maxtap-adserver-dev.appspot.com/o/content1.json?alt=media&token=4464ee3b-8463-4ede-a6df-8e717a7d7aae";
+        String url = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/spiderman-4.json";
         String jsonStr = sh.makeServiceCall(url);
 
 
         if (jsonStr != null) {
             try {
-                JSONObject jsonObj = new JSONObject(jsonStr);
+                JSONArray jsonArr = new JSONArray(jsonStr);
+                JSONArray sortedJsonArray = new JSONArray();
+                List<JSONObject> jsonList = new ArrayList<JSONObject>();
+                for (int i = 0; i < jsonArr.length(); i++) {
+                    jsonList.add(jsonArr.getJSONObject(i));
+                }
+                Collections.sort( jsonList, new Comparator<JSONObject>() {
 
-                // Getting JSON Array node
-                JSONObject ads = jsonObj.getJSONObject("Ad2");
-                JSONObject img = ads.getJSONObject("image");
-                url1 = img.getString("src");
+                    public int compare(JSONObject a, JSONObject b) {
+                        Integer valA= 0;
+                        Integer valB= 0;
+                        try {
+                            valA =  (Integer) a.get("start");
+                            valB = (Integer) b.get("start");
+                            Log.i("start",valA+""+valB+" ");
+                        }
+                        catch (JSONException e) {
+                            //do something
+                        }
+
+                        return valA.compareTo(valB);
+                    }
+                });
+                for (int i = 0; i < jsonArr.length(); i++) {
+                    sortedJsonArray.put(jsonList.get(i));
+                }
+                Log.e("size....",sortedJsonArray.length()+" ");
+                for(int i=0;i<sortedJsonArray.length();i++) {
+
+                    JSONObject ads = sortedJsonArray.getJSONObject(i);
+                    arr1.add(ads);
+                    String s1 = ads.getString("img_url");
+
+
+                    arr.add(s1);
+                }
+
+
+
 
                 }
             catch (final JSONException e) {
@@ -99,18 +157,20 @@ private static class GetImageJson extends AsyncTask<Void, Void, Void> {
 
         }
 
+
         return null;
     }
 
-    @Override
-    protected void onPostExecute(Void result) {
-        super.onPostExecute(result);
 
-        new DownLoadImageTask(imageView).execute(url1);
+    protected ArrayList<String> onPostExecute(ArrayList<String> strings) {
+
+
+        return arr;
+
     }
 }
 
-private static class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
+private  class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
         ImageView imageView;
 
         public DownLoadImageTask(ImageView imageView){
@@ -143,6 +203,7 @@ private static class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
          */
         protected void onPostExecute(Bitmap result){
             imageView.setImageBitmap(result);
+
         }
     }
 
