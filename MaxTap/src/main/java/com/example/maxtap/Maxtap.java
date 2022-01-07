@@ -1,15 +1,27 @@
 package com.example.maxtap;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
+import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 
 import com.google.android.exoplayer2.ExoPlayer;
 
@@ -19,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,73 +39,91 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Maxtap {
-    ExoPlayer player;
+   Activity activity;
+    View playerView;
+      int pos=0;
+    ArrayList<JSONObject> arrayList;
+    public void getAds(Activity activity, View playerView) {
 
-    public void getAds(ExoPlayer player1, final ImageView image) {
-        image.setVisibility(View.GONE);
-        final ArrayList<String>arr=new ArrayList<String>();
-        final ArrayList<JSONObject> arrayList=new ArrayList<JSONObject>();
-        new GetImageJson(arr,arrayList).execute();
+        this.activity=activity;
+        this.playerView=playerView;
 
+        arrayList=new ArrayList<JSONObject>();
+        //reading from JSON.
+        new GetImageJson(arrayList).execute();
 
-
-
-        player = player1;
-        final Integer[] var = {new Integer(0)};
-        for (int i = 0; i < 100; i++) {
-            int mill = 1000 * (i + 1);
-
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if(arrayList.size()> var[0].intValue()){
-                    long x = player.getCurrentPosition() / 1000;
-                    if(x==1){
-                        try {
-                            new DownLoadImageTask(image).execute((String)arrayList.get(var[0].intValue()).get("img_url"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                    else {
-                        try {
-
-                            Log.e("start-----",arrayList.size()+" "+ var[0].intValue());
-
-                            if (x == (((Integer)(arrayList.get(var[0].intValue()).get("start")))).intValue()) {
-
-
-                                image.setVisibility(View.VISIBLE);
-                            } else if (x ==(Integer)(arrayList.get(var[0].intValue()).get("end"))) {
-
-                                image.setVisibility(View.GONE);
-                                var[0] =new Integer(var[0].intValue()+1);
-
-                                new DownLoadImageTask(image).execute(arr.get(1));
-
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                }
-                }
-            }, mill);
 
 
     }
-
-    }
+//
+//
+//
+//
+//        image.setVisibility(View.GONE);
+//        final ArrayList<String>arr=new ArrayList<String>();
+//        final ArrayList<JSONObject> arrayList=new ArrayList<JSONObject>();
+//        //reading from JSON.
+//        new GetImageJson(arr,arrayList).execute();
+//
+//
+//        player = player1;
+//        final Integer[] var = {new Integer(0)};
+//            //for seeing every second.
+//                for (int i = 0; i < 100; i++) {
+//            int mill = 1000 * (i + 1);
+//
+//            Handler handler = new Handler();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if(arrayList.size()> var[0].intValue()){
+//                    long x = player.getCurrentPosition() / 1000;
+//                    if(x==1){
+//                        try {
+//                            //getting the mitmap.
+//                            new DownLoadImageTask(image).execute((String)arrayList.get(var[0].intValue()).get("img_url"));
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                    }
+//                    else {
+//                        try {
+//
+//                            //Log.e("start-----",arrayList.size()+" "+ var[0].intValue());
+//
+//                            if (x == (((Integer)(arrayList.get(var[0].intValue()).get("start")))).intValue()) {
+////
+////
+////                                image.setVisibility(View.VISIBLE);
+////                            } else if (x ==(Integer)(arrayList.get(var[0].intValue()).get("end"))) {
+////
+//                                image.setVisibility(View.GONE);
+//                                var[0] =new Integer(var[0].intValue()+1);
+//
+//                                new DownLoadImageTask(image).execute(arr.get(1));
+//
+//                            }
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//
+//                }
+//                }
+//            }, mill);
+//
+//
+//    }
+//
+//    }
 
 private static class GetImageJson extends AsyncTask<Void, Void, Void> {
-        ArrayList<String> arr;
+//        ArrayList<String> arr;
         ArrayList<JSONObject> arr1;
         String url1;
-        public GetImageJson (ArrayList<String> arrayList,ArrayList<JSONObject> object){
-        arr=arrayList;
+        public GetImageJson (ArrayList<JSONObject> object){
+
         arr1=object;
     }
 
@@ -141,7 +172,7 @@ private static class GetImageJson extends AsyncTask<Void, Void, Void> {
                     String s1 = ads.getString("img_url");
 
 
-                    arr.add(s1);
+
                 }
 
 
@@ -162,12 +193,7 @@ private static class GetImageJson extends AsyncTask<Void, Void, Void> {
     }
 
 
-    protected ArrayList<String> onPostExecute(ArrayList<String> strings) {
 
-
-        return arr;
-
-    }
 }
 
 private  class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
@@ -206,6 +232,113 @@ private  class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
 
         }
     }
+    boolean viewInserted =false,firstLoad=true;
+    ImageView img ;
+   RelativeLayout ads;
+    public void updateAds(long position) {
+        try {
+            if (arrayList.size() > 0 && pos<arrayList.size()) {
+
+                if(firstLoad) {
+                    img = new ImageView(activity);
+                    //img.setMaxWidth(100);
+                    new DownLoadImageTask(img).execute((String) arrayList.get(pos).get("img_url"));
+                    firstLoad=false;
+                }
+
+
+                long startTime = (((Integer) (arrayList.get(pos).get("start")))).intValue()*1000, endTime = (((Integer) (arrayList.get(pos).get("end")))).intValue()*1000;
+
+                    Log.e("Coming....",startTime+" "+endTime+"\n");
+
+                if (position >= startTime && (!viewInserted)) {
+                    Context context;
+                    viewInserted = true;
+                    int x=150;
+                    int y=150;
+
+                  LinearLayout.MarginLayoutParams imageLayout =new LinearLayout.MarginLayoutParams(x,y);
+//                    //img.setLayoutParams(parms);
+//                    parms1.setMargins(400,500,20,200);
+                    img.setLayoutParams(imageLayout);
+                    RelativeLayout mainConatiner=new RelativeLayout(activity);
+                    RelativeLayout.LayoutParams parms2 = new RelativeLayout.LayoutParams(400, 200);
+                    mainConatiner.setLayoutParams(parms2);
+                    mainConatiner.setBackgroundColor(Color.RED);
+
+
+
+//
+                    mainConatiner.addView(img);
+
+                    TextView txt = new TextView(activity);
+                    txt.setText("Myhyhjy");
+//                    LinearLayout.LayoutParams textLa = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//
+//                    txt.setLayoutParams(textLa);
+                    mainConatiner.addView(txt);
+                    RelativeLayout.LayoutParams params =
+                            new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+//                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+//                    img.setLayoutParams(params);
+
+
+//                  parms1.width=(int) playerView.getLayoutParams().width*(int)(10.0/100);
+//                    parms1.height=(int)playerView.getLayoutParams().height*(int)(5.0/100);
+
+                    Log.e("widht...",imageLayout.width+" "+imageLayout.height);
+
+//
+//                   ads=new RelativeLayout(activity);
+//                   ads.addView(img);
+//
+//
+////                    ad=new RelativeLayout(activity);
+////                    ad.addView(img);
+//                    TextView txt = new TextView(activity);
+//                    txt.setText("Myantra");
+//                    LinearLayout.MarginLayoutParams parm1 = (ViewGroup.MarginLayoutParams) playerView.getLayoutParams();
+
+
+
+
+
+
+
+                    ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
+
+                    RelativeLayout.LayoutParams params1 =
+                            new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+                    mainConatiner.setLayoutParams(params1);
+                    rootview.addView(mainConatiner);
+                }
+                if (position >= endTime && (viewInserted)) {
+                    ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
+                    rootview.removeView(img);
+                    pos++;
+                    viewInserted = false;
+                    if(pos<arrayList.size()) {
+                        img = new ImageView(activity);
+                        new DownLoadImageTask(img).execute((String) arrayList.get(pos).get("img_url"));
+                    }
+                }
+
+
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+
+        }
+    }
+
+
+
+
+
 
 
 }

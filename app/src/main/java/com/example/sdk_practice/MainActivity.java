@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -20,6 +23,19 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
             ExoPlayer player;
+    final Maxtap maxtap =new Maxtap();
+    final  Handler handler=new Handler();
+    final Runnable runnable =new Runnable() {
+        @Override
+        public void run() {
+            maxtap.updateAds(player.getCurrentPosition());
+            handler.postDelayed(runnable,1000);
+        }
+    };
+
+
+
+
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
@@ -40,8 +56,12 @@ public class MainActivity extends AppCompatActivity {
         //playing the video.
         player.play();
 
-        Maxtap maxtap =new Maxtap();
-        maxtap.getAds(player,image);
+        maxtap.getAds(this,(View)playerView);
+                //() -> {}
+
+
+     handler.postDelayed(runnable,1000);
+
 
 
 
