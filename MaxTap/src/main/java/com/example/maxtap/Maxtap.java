@@ -1,6 +1,4 @@
 package com.example.maxtap;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,15 +6,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Handler;
-import android.text.Layout;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -24,27 +17,16 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.RelativeLayout;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.RequiresApi;
-
-import com.google.android.exoplayer2.ExoPlayer;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 public class Maxtap {
@@ -52,24 +34,27 @@ public class Maxtap {
     View playerView;
     int pos = 0;
     ArrayList<JSONObject> arrayList;
-
-    public void getAds(Activity activity, View playerView) {
+    String client_id;/*getting the client id*/
+    static String  content_id;/*getting the content played from particular client*/
+    //For intializing
+    public void init(Activity activity, View playerView,String clientContent,String client) {
 
         this.activity = activity;
         this.playerView = playerView;
-
+        content_id=clientContent;
+        this.client_id=client;
         arrayList = new ArrayList<JSONObject>();
         // reading from JSON.
-        new GetImageJson(arrayList).execute();
+        new ReadJson(arrayList).execute();
 
     }
 
-    private static class GetImageJson extends AsyncTask<Void, Void, Void> {
+    private static class ReadJson extends AsyncTask<Void, Void, Void> {
 
         ArrayList<JSONObject> arr1;
         String url1;
 
-        public GetImageJson(ArrayList<JSONObject> object) {
+        public ReadJson(ArrayList<JSONObject> object) {
 
             arr1 = object;
         }
@@ -78,7 +63,8 @@ public class Maxtap {
         protected Void doInBackground(Void... arg0) {
             HttpHandler sh = new HttpHandler();
             // Making a request to url and getting response
-            String url = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/spiderman-4.json";
+
+            String url = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/"+content_id+".json";
             String jsonStr = sh.makeServiceCall(url);
 
             if (jsonStr != null) {
@@ -99,7 +85,7 @@ public class Maxtap {
                                 valB = (Integer) b.get("start");
 
                             } catch (JSONException e) {
-                                // do something
+                                e.printStackTrace();
                             }
 
                             return valA.compareTo(valB);
@@ -128,10 +114,10 @@ public class Maxtap {
 
     }
 
-    private class DownLoadImageTask extends AsyncTask<String, Void, Bitmap> {
+    private class GettingImage extends AsyncTask<String, Void, Bitmap> {
         ImageView imageView;
 
-        public DownLoadImageTask(ImageView imageView) {
+        public GettingImage(ImageView imageView) {
             this.imageView = imageView;
         }
 
@@ -154,7 +140,7 @@ public class Maxtap {
         }
     }
 
-    // Real code starts
+
 
     boolean viewInserted = false, firstLoad = true;
     ImageView img;
@@ -166,15 +152,15 @@ public class Maxtap {
                 if (firstLoad) {
                     img = new ImageView(activity);
 
-                    new DownLoadImageTask(img).execute((String) arrayList.get(pos).get("img_url"));
+                    new GettingImage(img).execute((String) arrayList.get(pos).get("img_url"));
                     firstLoad = false;
                 }
 
-                long startTime = (((Integer) (arrayList.get(pos).get("start")))).intValue() * 1000,
+                long startTime = (((Integer)(arrayList.get(pos).get("start")))).intValue() * 1000,
                         endTime = (((Integer) (arrayList.get(pos).get("end")))).intValue() * 1000;
 
                 if (position >= startTime && (!viewInserted)) {
-                   LinearLayout.LayoutParams par = new LinearLayout.LayoutParams(100,
+                   LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(100,
                             ViewGroup.LayoutParams.MATCH_PARENT);
                      topContainer = new RelativeLayout(activity);
 
@@ -189,7 +175,6 @@ public class Maxtap {
 
                     int bottom=playerView.getBottom();
                     int right=playerView.getRight();
-                    Log.e("Values...........",bottom+" "+right+" ");
 
                     DisplayMetrics displayMetrics=new DisplayMetrics();
                     activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -207,12 +192,12 @@ public class Maxtap {
                             r.getDisplayMetrics()
                     );
 
-                    RelativeLayout.LayoutParams parms2 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,height);
-                    parms2.setMargins(0, 0, displayMetrics.widthPixels-right, displayMetrics.heightPixels-bottom);
+                    RelativeLayout.LayoutParams mainParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,height);
+                    mainParams.setMargins(0, 0, displayMetrics.widthPixels-right, displayMetrics.heightPixels-bottom);
 
-                    parms2.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
-                    parms2.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-                    mainConatiner.setLayoutParams(parms2);
+                    mainParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+                    mainParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+                    mainConatiner.setLayoutParams(mainParams);
                     FrameLayout.LayoutParams viewGrp= new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
 
@@ -238,7 +223,7 @@ public class Maxtap {
                         }
                     });
                     mainConatiner.addView(txt);
-                    mainConatiner.addView(img,par);
+                    mainConatiner.addView(img,imageParams);
 
 
                     ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
@@ -257,7 +242,7 @@ public class Maxtap {
                     viewInserted = false;
                     if (pos < arrayList.size()) {
                         img = new ImageView(activity);
-                        new DownLoadImageTask(img).execute((String) arrayList.get(pos).get("img_url"));
+                        new GettingImage(img).execute((String) arrayList.get(pos).get("img_url"));
                     }
                 }
 

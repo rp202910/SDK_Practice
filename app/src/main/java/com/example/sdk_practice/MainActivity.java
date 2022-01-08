@@ -22,9 +22,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-            ExoPlayer player;
+    ExoPlayer player;
+    /*Add this to the client side*/
     final Maxtap maxtap =new Maxtap();
-    final  Handler handler=new Handler();
+    final Handler handler=new Handler();
     final Runnable runnable =new Runnable() {
         @Override
         public void run() {
@@ -32,36 +33,41 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(runnable,1000);
         }
     };
+    /*TILL HERE*/
 
 
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-            @Override
-            protected void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                setContentView(R.layout.activity_main);
-
-                // creating an instance of ExoPlayer.
-                player = new ExoPlayer.Builder(this).build();
-                final ImageView image =findViewById(R.id.imageView);
-                PlayerView playerView=findViewById(R.id.exoPlayer);
-                //Binding the player with the view that is there in our xml.
-                playerView.setPlayer(player);
-                //Building the media Item.
-                MediaItem mediaItem = MediaItem.fromUri("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4" );
-                //Setting the media item that is to be played.
-                player.setMediaItem(mediaItem);
-                //preparing the player
-                player.prepare();
+        // creating an instance of ExoPlayer.
+        player = new ExoPlayer.Builder(this).build();
+        final ImageView image =findViewById(R.id.imageView);
+        PlayerView playerView=findViewById(R.id.exoPlayer);
+        //Binding the player with the view that is there in our xml.
+        playerView.setPlayer(player);
+        //Building the media Item.
+        MediaItem mediaItem = MediaItem.fromUri("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4" );
+        //Setting the media item that is to be played.
+        player.setMediaItem(mediaItem);
+        //preparing the player
+        player.prepare();
         //playing the video.
         player.play();
 
-        maxtap.getAds(this,(View)playerView);
-                //() -> {}
 
 
-     handler.postDelayed(runnable,1000);
+        String clientContentId="spiderman-4";
 
+        String clientId="hotstar";
+
+        /*Add these line to the ott side*/
+        maxtap.init(this,(View)playerView,clientContentId,clientId);
+        //This will intialiize the feilds.
+        handler.postDelayed(runnable,1000);
+        /*Till here*/
 
 
 
