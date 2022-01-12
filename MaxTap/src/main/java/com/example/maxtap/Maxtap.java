@@ -10,10 +10,13 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,36 +30,67 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Maxtap {
     Activity activity;
     View playerView;
-    int pos = 0;
+    int adIndex = 0;
     ArrayList<JSONObject> arrayList;
-    String client_id;/*getting the client id*/
-    static String  content_id;/*getting the content played from particular client*/
+    HashMap<Pair<Integer,Integer>,JSONObject> hashMap;
+    HashMap<JSONObject,ImageView> imageViewHashMap;
+
+    String clientId;/*getting the client id*/
+    static String contentId;/*getting the content played from particular client*/
     //For intializing
-    public void init(Activity activity, View playerView,String clientContent,String client) {
+    public void init(Activity activity, View playerView,String clientContentId,String client) {
 
         this.activity = activity;
         this.playerView = playerView;
-        content_id=clientContent;
-        this.client_id=client;
+        contentId =clientContentId;
+        this.clientId=client;
+
         arrayList = new ArrayList<JSONObject>();
+        hashMap=new HashMap<>();
+        imageViewHashMap=new HashMap<>();
         // reading from JSON.
-        new ReadJson(arrayList).execute();
+        new ReadJson(arrayList,hashMap,imageViewHashMap).execute();
 
     }
+//    static <T> void  sortingAds(List<T> objects){
+//        Collections.sort(objects , new Comparator<T>() {
+//
+//            public int compare(T ad1, T ad2) {
+//                Integer getStartA = 0;
+//                Integer getStartB = 0;
+//                try {
+//                    getStartA = (Integer) ad1.get("start");
+//                    getStartB = (Integer) ad2.get("start");
+//
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                return getStartA.compareTo(getStartB);
+//            }
+//        });
+//
+//
+//    }
 
-    private static class ReadJson extends AsyncTask<Void, Void, Void> {
 
-        ArrayList<JSONObject> arr1;
-        String url1;
 
-        public ReadJson(ArrayList<JSONObject> object) {
+    private  class ReadJson extends AsyncTask<Void, Void, Void> {
 
-            arr1 = object;
+        ArrayList<JSONObject> adList;
+        HashMap<Pair<Integer,Integer>,JSONObject> hashMap;
+        HashMap<JSONObject,ImageView> imageViewHashMap;
+        public ReadJson(ArrayList<JSONObject> object,HashMap<Pair<Integer,Integer>,JSONObject> hashMap,HashMap<JSONObject,ImageView> imageViewHashMap) {
+            this.hashMap=hashMap;
+            this.imageViewHashMap=imageViewHashMap;
+            adList = object;
         }
 
         @Override
@@ -64,8 +98,9 @@ public class Maxtap {
             HttpHandler sh = new HttpHandler();
             // Making a request to url and getting response
 
-            String url = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/"+content_id+".json";
-            String jsonStr = sh.makeServiceCall(url);
+           // String dataUrl = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/"+ contentId +".json";
+            String dataUrl="https://firebasestorage.googleapis.com/v0/b/maxtap-adserver-dev.appspot.com/o/Naagin.json?alt=media&token=7b26b182-2da0-4174-afe0-697fe96ed287";
+            String jsonStr = sh.makeServiceCall(dataUrl);
 
             if (jsonStr != null) {
                 try {
@@ -75,20 +110,23 @@ public class Maxtap {
                     for (int i = 0; i < jsonArr.length(); i++) {
                         jsonList.add(jsonArr.getJSONObject(i));
                     }
-                    Collections.sort(jsonList, new Comparator<JSONObject>() {
+                    //Task1.Put in the file.
 
-                        public int compare(JSONObject a, JSONObject b) {
-                            Integer valA = 0;
-                            Integer valB = 0;
+
+                    Collections.sort(jsonList , new Comparator<JSONObject>() {
+
+                        public int compare(JSONObject ad1, JSONObject ad2) {
+                            Integer getStartA = 0;
+                            Integer getStartB = 0;
                             try {
-                                valA = (Integer) a.get("start");
-                                valB = (Integer) b.get("start");
+                                getStartA = (Integer) ad1.get("start_time");
+                                getStartB = (Integer) ad2.get("start_time");
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
 
-                            return valA.compareTo(valB);
+                            return getStartA.compareTo(getStartB);
                         }
                     });
                     for (int i = 0; i < jsonArr.length(); i++) {
@@ -98,8 +136,14 @@ public class Maxtap {
                     for (int i = 0; i < sortedJsonArray.length(); i++) {
 
                         JSONObject ads = sortedJsonArray.getJSONObject(i);
-                        arr1.add(ads);
-                        String s1 = ads.getString("img_url");
+                        adList.add(ads);
+                        Integer getStartA = 0;
+                        Integer getEndA = 0;
+                        getStartA=(Integer)ads.get("start_time");
+                        getEndA=(Integer)ads.get("end_time");
+                        Pair<Integer,Integer> p=new Pair<>(getStartA,getEndA);
+                        hashMap.put(p,ads);
+
                     }
                 } catch (final JSONException e) {
                     e.printStackTrace();
@@ -112,6 +156,23 @@ public class Maxtap {
             return null;
         }
 
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            for(int i=0;i<adList.size();i++){
+                Context context;
+                ImageView img=new ImageView(activity);
+                try {
+                    new GettingImage(img).execute((String) adList.get(i).get("image_link"));
+                    imageViewHashMap.put(adList.get(i),img);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+
+        }
     }
 
     private class GettingImage extends AsyncTask<String, Void, Bitmap> {
@@ -144,37 +205,59 @@ public class Maxtap {
 
     boolean viewInserted = false, firstLoad = true;
     ImageView img;
+
     RelativeLayout topContainer;
     public void updateAds(long position) {
+
         try {
-            if (arrayList.size() > 0 && pos < arrayList.size()) {
+            if (arrayList.size() > 0 && hashMap.size()>0) {
 
-                if (firstLoad) {
-                    img = new ImageView(activity);
 
-                    new GettingImage(img).execute((String) arrayList.get(pos).get("img_url"));
-                    firstLoad = false;
+                JSONObject jsonObject=null;
+                JSONObject jsonObject1=null;
+                for (Map.Entry<Pair<Integer,Integer>,JSONObject> entry : hashMap.entrySet()) //using map.entrySet() for iteration
+                {
+
+                    Pair<Integer,Integer> p=entry.getKey();
+                    long startTime = (p.first.intValue()) * 1000,
+                        endTime = (p.second.intValue()) * 1000;
+
+
+                    if(startTime<=position && endTime>=position)
+                    {
+                        jsonObject=entry.getValue();
+                        img=imageViewHashMap.get(jsonObject);
+                        break;
+                    }
+
                 }
 
-                long startTime = (((Integer)(arrayList.get(pos).get("start")))).intValue() * 1000,
-                        endTime = (((Integer) (arrayList.get(pos).get("end")))).intValue() * 1000;
 
-                if (position >= startTime && (!viewInserted)) {
+
+
+                if (jsonObject!=null) {
                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(100,
                             ViewGroup.LayoutParams.MATCH_PARENT);
-                     topContainer = new RelativeLayout(activity);
+                    if(topContainer!=null){
+                        ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
+                        rootview.removeView(topContainer);
+                    }
+                        topContainer = new RelativeLayout(activity);
+                    img=imageViewHashMap.get(jsonObject);
+                    ViewGroup grandparent = (ViewGroup) ((View)img).getParent();
+                    if(grandparent!=null)
+                        grandparent.removeView(img);
 
                     Context context;
                     viewInserted = true;
                     img.setBackgroundColor(Color.BLUE);
 
 
-                    String s1=(String) arrayList.get(pos).get("product_details");
-                    final String s2=(String) arrayList.get(pos).get("ad_url");
-
-
-                    int bottom=playerView.getBottom();
+                    String s1=(String) jsonObject.get("caption_regional_language");
+                    final String s2=(String) jsonObject.get("product_link");
+                    final int[] bottom = {playerView.getBottom()};
                     int right=playerView.getRight();
+
 
                     DisplayMetrics displayMetrics=new DisplayMetrics();
                     activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -183,7 +266,7 @@ public class Maxtap {
                     Resources r = activity.getResources();
                     int height = (int) TypedValue.applyDimension(
                             TypedValue.COMPLEX_UNIT_DIP,
-                            75,
+                            80,
                             r.getDisplayMetrics()
                     );
                     int width = (int) TypedValue.applyDimension(
@@ -193,7 +276,7 @@ public class Maxtap {
                     );
 
                     RelativeLayout.LayoutParams mainParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,height);
-                    mainParams.setMargins(0, 0, displayMetrics.widthPixels-right, displayMetrics.heightPixels-bottom);
+                    mainParams.setMargins(0, 0, displayMetrics.widthPixels-right, displayMetrics.heightPixels- bottom[0]);
 
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -235,15 +318,12 @@ public class Maxtap {
 
 
                 }
-                if (position >= endTime && (viewInserted)) {
+                if (jsonObject==null && (viewInserted)) {
                     ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
                     rootview.removeView(topContainer);
-                    pos++;
+
                     viewInserted = false;
-                    if (pos < arrayList.size()) {
-                        img = new ImageView(activity);
-                        new GettingImage(img).execute((String) arrayList.get(pos).get("img_url"));
-                    }
+
                 }
 
             }
