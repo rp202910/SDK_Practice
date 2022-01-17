@@ -1,5 +1,4 @@
 package com.example.maxtap;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -46,45 +45,22 @@ public class Maxtap {
     HashMap<Pair<Integer, Integer>, JSONObject> hashMap;
     HashMap<JSONObject, ImageView> imageViewHashMap;
 
-    String clientId;/*getting the client id*/
-    static String contentId;/*getting the content played from particular client*/
+    String clientId;/* getting the client id */
+    static String contentId;/* getting the content played from particular client */
 
-    //For initializing
+    // For initializing
     public void init(Activity activity, View playerView, String clientContentId, String client) {
 
         this.activity = activity;
         this.playerView = playerView;
         contentId = clientContentId;
         this.clientId = client;
-
         arrayList = new ArrayList<JSONObject>();
         hashMap = new HashMap<>();
         imageViewHashMap = new HashMap<>();
         // reading from JSON.
         new ReadJson(arrayList, hashMap, imageViewHashMap).execute();
-
     }
-//    static <T> void  sortingAds(List<T> objects){
-//        Collections.sort(objects , new Comparator<T>() {
-//
-//            public int compare(T ad1, T ad2) {
-//                Integer getStartA = 0;
-//                Integer getStartB = 0;
-//                try {
-//                    getStartA = (Integer) ad1.get("start");
-//                    getStartB = (Integer) ad2.get("start");
-//
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                return getStartA.compareTo(getStartB);
-//            }
-//        });
-//
-//
-//    }
-
 
     @SuppressLint("StaticFieldLeak")
     private class ReadJson extends AsyncTask<Void, Void, Void> {
@@ -93,7 +69,8 @@ public class Maxtap {
         HashMap<Pair<Integer, Integer>, JSONObject> hashMap;
         HashMap<JSONObject, ImageView> imageViewHashMap;
 
-        public ReadJson(ArrayList<JSONObject> object, HashMap<Pair<Integer, Integer>, JSONObject> hashMap, HashMap<JSONObject, ImageView> imageViewHashMap) {
+        public ReadJson(ArrayList<JSONObject> object, HashMap<Pair<Integer, Integer>, JSONObject> hashMap,
+                HashMap<JSONObject, ImageView> imageViewHashMap) {
             this.hashMap = hashMap;
             this.imageViewHashMap = imageViewHashMap;
             adList = object;
@@ -101,12 +78,14 @@ public class Maxtap {
 
         @Override
         protected Void doInBackground(Void... arg0) {
-            HttpHandler sh = new HttpHandler();
+            HttpHandler httpHandler = new HttpHandler();
             // Making a request to url and getting response
 
-            // String dataUrl = "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/"+ contentId +".json";
-            String dataUrl = "https://firebasestorage.googleapis.com/v0/b/maxtap-adserver-dev.appspot.com/o/Naagin.json?alt=media&token=7b26b182-2da0-4174-afe0-697fe96ed287";
-            String jsonStr = sh.makeServiceCall(dataUrl);
+             String dataUrl =
+             "https://storage.googleapis.com/maxtap-adserver-dev.appspot.com/"+ contentId
+             +".json";
+            //String dataUrl = "https://firebasestorage.googleapis.com/v0/b/maxtap-adserver-dev.appspot.com/o/Naagin.json?alt=media&token=7b26b182-2da0-4174-afe0-697fe96ed287";
+            String jsonStr = httpHandler.makeServiceCall(dataUrl);
 
             if (jsonStr != null) {
                 try {
@@ -116,7 +95,7 @@ public class Maxtap {
                     for (int i = 0; i < jsonArr.length(); i++) {
                         jsonList.add(jsonArr.getJSONObject(i));
                     }
-                    //Task1.Put in the file.
+                    // Task1.Put in the file.
 
                     Collections.sort(jsonList, new Comparator<JSONObject>() {
 
@@ -146,8 +125,8 @@ public class Maxtap {
                         Integer getEndA = 0;
                         getStartA = (Integer) ads.get("start_time");
                         getEndA = (Integer) ads.get("end_time");
-                        Pair<Integer, Integer> p = new Pair<>(getStartA, getEndA);
-                        hashMap.put(p, ads);
+                        Pair<Integer, Integer> adsPair = new Pair<>(getStartA, getEndA);
+                        hashMap.put(adsPair, ads);
 
                     }
                 } catch (final JSONException e) {
@@ -175,7 +154,6 @@ public class Maxtap {
                 }
 
             }
-
 
         }
     }
@@ -217,15 +195,14 @@ public class Maxtap {
         try {
             if (arrayList.size() > 0 && hashMap.size() > 0) {
 
-
                 JSONObject jsonObject = null;
-                for (Map.Entry<Pair<Integer, Integer>, JSONObject> entry : hashMap.entrySet()) //using map.entrySet() for iteration
+                for (Map.Entry<Pair<Integer, Integer>, JSONObject> entry : hashMap.entrySet()) // using map.entrySet()
+                                                                                               // for iteration
                 {
 
-                    Pair<Integer, Integer> p = entry.getKey();
-                    long startTime = (p.first) * 1000,
-                            endTime = (p.second) * 1000;
-
+                    Pair<Integer, Integer> adsPair = entry.getKey();
+                    long startTime = (adsPair.first) * 1000,
+                            endTime = (adsPair.second) * 1000;
 
                     if (startTime <= position && endTime >= position) {
                         jsonObject = entry.getValue();
@@ -235,15 +212,16 @@ public class Maxtap {
 
                 }
 
-
                 if (jsonObject != null) {
-                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(100,
+                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(150,
                             ViewGroup.LayoutParams.MATCH_PARENT);
+
                     if (topContainer != null) {
                         ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
                         rootview.removeView(topContainer);
                     }
                     topContainer = new RelativeLayout(activity);
+
                     img = imageViewHashMap.get(jsonObject);
                     assert img != null;
                     ViewGroup grandparent = (ViewGroup) ((View) img).getParent();
@@ -251,13 +229,12 @@ public class Maxtap {
                         grandparent.removeView(img);
 
                     viewInserted = true;
-//                    img.setBackgroundColor(Color.BLUE);
+                    // img.setBackgroundColor(Color.BLUE);
 
-                    String s1 = (String) jsonObject.get("caption_regional_language");
-                    final String s2 = (String) jsonObject.get("product_link");
-                    final int[] bottom = {playerView.getBottom()};
+                    String imageDescribtion = (String) jsonObject.get("caption_regional_language");
+                    final String productLink = (String) jsonObject.get("product_link");
+                    final int[] bottom = { playerView.getBottom() };
                     int right = playerView.getRight();
-
 
                     DisplayMetrics displayMetrics = new DisplayMetrics();
                     activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -267,28 +244,28 @@ public class Maxtap {
                     int height = (int) TypedValue.applyDimension(
                             TypedValue.COMPLEX_UNIT_DIP,
                             80,
-                            r.getDisplayMetrics()
-                    );
-//                    int width = (int) TypedValue.applyDimension(
-//                            TypedValue.COMPLEX_UNIT_DIP,
-//                            150,
-//                            r.getDisplayMetrics()
-//                    );
+                            r.getDisplayMetrics());
+                    // int width = (int) TypedValue.applyDimension(
+                    // TypedValue.COMPLEX_UNIT_DIP,
+                    // 150,
+                    // r.getDisplayMetrics()
+                    // );
 
-                    RelativeLayout.LayoutParams mainParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, height);
-                    mainParams.setMargins(0, 0, displayMetrics.widthPixels - right, displayMetrics.heightPixels - bottom[0]);
+                    RelativeLayout.LayoutParams mainParams = new RelativeLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, height);
+                    mainParams.setMargins(0, 0, displayMetrics.widthPixels - right,
+                            displayMetrics.heightPixels - bottom[0]);
 
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
                     mainConatiner.setLayoutParams(mainParams);
-                    FrameLayout.LayoutParams viewGrp =
-                            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                    FrameLayout.LayoutParams viewGrp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT);
 
                     mainConatiner.setBackgroundColor(Color.argb(80, 0, 0, 0));
 
-
                     TextView txt = new TextView(activity);
-                    txt.setText(s1);
+                    txt.setText(imageDescribtion);
                     LinearLayout.LayoutParams textLa = new LinearLayout.LayoutParams(
                             150, ViewGroup.LayoutParams.MATCH_PARENT);
                     txt.setGravity(Gravity.CENTER_VERTICAL);
@@ -300,13 +277,12 @@ public class Maxtap {
                     mainConatiner.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(s2));
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(productLink));
                             activity.startActivity(browserIntent);
                         }
                     });
                     mainConatiner.addView(txt);
                     mainConatiner.addView(img, imageParams);
-
 
                     ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
 
@@ -314,7 +290,6 @@ public class Maxtap {
                     rootview.addView(topContainer);
 
                     topContainer.setLayoutParams(viewGrp);
-
 
                 }
                 if (jsonObject == null && (viewInserted)) {
@@ -341,7 +316,7 @@ public class Maxtap {
         }
     };
 
-    public void runAds(ExoPlayer exoPlayer){
+    public void runAds(ExoPlayer exoPlayer) {
         this.exoPlayer = exoPlayer;
         handler.postDelayed(runnable, 1000);
     }
