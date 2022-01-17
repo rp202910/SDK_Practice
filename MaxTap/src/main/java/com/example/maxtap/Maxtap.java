@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -213,7 +214,11 @@ public class Maxtap {
                 }
 
                 if (jsonObject != null) {
-                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(150,
+                        int widthPlayer=playerView.getLayoutParams().width;
+                        int getWidth=(int)(widthPlayer*20.0)/100;
+                    Log.e("getting height",getWidth+" ");
+
+                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(getWidth,
                             ViewGroup.LayoutParams.MATCH_PARENT);
 
                     if (topContainer != null) {
