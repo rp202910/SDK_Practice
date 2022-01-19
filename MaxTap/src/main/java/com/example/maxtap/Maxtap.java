@@ -15,13 +15,16 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.ExoPlayer;
@@ -60,6 +63,9 @@ public class Maxtap {
         hashMap = new HashMap<>();
         imageViewHashMap = new HashMap<>();
         // reading from JSON.
+
+//videoview.setLayoutParams(new FrameLayout.LayoutParams(550,550));
+
         new ReadJson(arrayList, hashMap, imageViewHashMap).execute();
     }
 
@@ -193,6 +199,8 @@ public class Maxtap {
 
     public void updateAds(long position) {
 
+
+
         try {
             if (arrayList.size() > 0 && hashMap.size() > 0) {
 
@@ -216,16 +224,23 @@ public class Maxtap {
                 if (jsonObject != null) {
                         int widthPlayer=playerView.getLayoutParams().width;
                         int getWidth=(int)(widthPlayer*20.0)/100;
-                    Log.e("getting height",getWidth+" ");
+                    Log.e("Charan is checking.....",widthPlayer+" ");
 
-                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(getWidth,
-                            ViewGroup.LayoutParams.MATCH_PARENT);
+
 
                     if (topContainer != null) {
                         ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
                         rootview.removeView(topContainer);
                     }
                     topContainer = new RelativeLayout(activity);
+
+
+                    int playerHeight=playerView.getLayoutParams().height;
+                    
+
+
+
+
 
                     img = imageViewHashMap.get(jsonObject);
                     assert img != null;
@@ -238,28 +253,34 @@ public class Maxtap {
 
                     String imageDescribtion = (String) jsonObject.get("caption_regional_language");
                     final String productLink = (String) jsonObject.get("product_link");
-                    final int[] bottom = { playerView.getBottom() };
+                    int  bottom = playerView.getBottom();
                     int right = playerView.getRight();
+                   // Log.e("width and height",bottom+" "+right);
 
                     DisplayMetrics displayMetrics = new DisplayMetrics();
                     activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
                     LinearLayout mainConatiner = new LinearLayout(activity);
                     mainConatiner.setOrientation(LinearLayout.HORIZONTAL);
-                    Resources r = activity.getResources();
+                                Resources r = activity.getResources();
                     int height = (int) TypedValue.applyDimension(
                             TypedValue.COMPLEX_UNIT_DIP,
                             80,
                             r.getDisplayMetrics());
-                    // int width = (int) TypedValue.applyDimension(
-                    // TypedValue.COMPLEX_UNIT_DIP,
-                    // 150,
-                    // r.getDisplayMetrics()
-                    // );
+                    int getWidth1=(int)(right*13.0)/100;
+                    int width = (int) TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            150,
+                            r.getDisplayMetrics()
+                    );
+
+                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT);
 
                     RelativeLayout.LayoutParams mainParams = new RelativeLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT, height);
+                            width, height);
+                    Log.e("Width Pixels",displayMetrics.widthPixels+" "+right);
                     mainParams.setMargins(0, 0, displayMetrics.widthPixels - right,
-                            displayMetrics.heightPixels - bottom[0]);
+                            displayMetrics.heightPixels - bottom);
 
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
                     mainParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -275,10 +296,11 @@ public class Maxtap {
                             150, ViewGroup.LayoutParams.MATCH_PARENT);
                     txt.setGravity(Gravity.CENTER_VERTICAL);
                     txt.setLayoutParams(textLa);
+                    txt.setTextSize(14);
                     txt.setTextColor(Color.WHITE);
                     textLa.leftMargin = 10;
 
-                    txt.setTypeface(null, Typeface.BOLD);
+                   // txt.setTypeface(null, Typeface.BOLD);
                     mainConatiner.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -291,10 +313,14 @@ public class Maxtap {
 
                     ViewGroup rootview = (ViewGroup) activity.findViewById(android.R.id.content).getRootView();
 
+                    int widthPlayer1=rootview.getLayoutParams().width;
+                    //int getWidth1=(int)(widthPlayer*20.0)/100;
+                    //Log.e("Charan1234 is checking.....",widthPlayer1+" ");
                     topContainer.addView(mainConatiner);
+                    topContainer.setLayoutParams(viewGrp);
                     rootview.addView(topContainer);
 
-                    topContainer.setLayoutParams(viewGrp);
+
 
                 }
                 if (jsonObject == null && (viewInserted)) {
